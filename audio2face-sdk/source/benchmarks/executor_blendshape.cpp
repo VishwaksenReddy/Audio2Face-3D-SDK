@@ -32,7 +32,7 @@
 static void CustomRangesOffline(benchmark::internal::Benchmark* b, std::initializer_list<int64_t> nbTracksArg) {
     using ExecutionOption = nva2f::IGeometryExecutor::ExecutionOption;
     b->UseRealTime();
-    b->ArgNames({"FP16", "UseGPU", "Identity", "ExecutionOption", "A2EPrecompute", "A2ESkipInference", "NbTracks"});  // Assign meaningful names
+    b->ArgNames({"FP16", "UseGPU", "Identity", "ExecutionOption", "NbTracks"});  // Assign meaningful names
     b->ArgsProduct({
         {0, 1},
         {0, 1},
@@ -43,8 +43,6 @@ static void CustomRangesOffline(benchmark::internal::Benchmark* b, std::initiali
             static_cast<int>(ExecutionOption::Tongue),
             static_cast<int>(ExecutionOption::SkinTongue)
         },
-        {0, 1},
-        {0, 1, 2, 4, 8, 16, 32},
         nbTracksArg
     }); // Define for all the combinations
 }
@@ -54,9 +52,7 @@ static void BM_RegressionBlendshapeSolveExecutorOffline(benchmark::State& state)
     bool useGPUSolver = state.range(1);
     auto identity = state.range(2);
     auto executionOption = static_cast<nva2f::IGeometryExecutor::ExecutionOption>(state.range(3));
-    bool precomputeA2E = state.range(4);
-    auto a2eSkipInference = state.range(5);
-    auto nbTracks = static_cast<std::size_t>(state.range(6));
+    auto nbTracks = static_cast<std::size_t>(state.range(4));
 
     nva2f::IRegressionModel::IGeometryModelInfo* rawModelInfoPtr = nullptr;
     auto bundle = ToUniquePtr(
@@ -74,22 +70,16 @@ static void BM_RegressionBlendshapeSolveExecutorOffline(benchmark::State& state)
     CHECK_AND_SKIP(rawModelInfoPtr != nullptr);
     auto modelInfo = ToUniquePtr(rawModelInfoPtr);
 
-    auto emotionExecutor = CreateEmotionExecutor(
-        bundle->GetCudaStream().Data(), bundle, a2eSkipInference
-    );
-
     std::ostringstream label;
     label << "FP16: " << useFP16
         << ", useGPUSolver: " << useGPUSolver
         << ", identity: " << modelInfo->GetNetworkInfo().GetIdentityName()
         << ", executionOption: " << blendshapeExecutionOptionToString(executionOption)
-        << ", A2EPrecompute: " << precomputeA2E
-        << ", A2ESkipInference: " << a2eSkipInference
         << ", NbTracks: " << nbTracks
         ;
     state.SetLabel(label.str());
 
-    RunExecutorOffline<nva2f::IBlendshapeExecutorBundle>(state, precomputeA2E, bundle, emotionExecutor);
+    RunExecutorOffline<nva2f::IBlendshapeExecutorBundle>(state, bundle);
 }
 
 BENCHMARK(BM_RegressionBlendshapeSolveExecutorOffline)->Apply([](benchmark::internal::Benchmark* b) {
@@ -101,9 +91,7 @@ static void BM_DiffusionBlendshapeSolveExecutorOffline(benchmark::State& state) 
     bool useGPUSolver = state.range(1);
     auto identity = state.range(2);
     auto executionOption = static_cast<nva2f::IGeometryExecutor::ExecutionOption>(state.range(3));
-    bool precomputeA2E = state.range(4);
-    auto a2eSkipInference = state.range(5);
-    auto nbTracks = static_cast<std::size_t>(state.range(6));
+    auto nbTracks = static_cast<std::size_t>(state.range(4));
     const auto constantNoise = true;
 
     nva2f::IDiffusionModel::IGeometryModelInfo* rawModelInfoPtr = nullptr;
@@ -123,22 +111,16 @@ static void BM_DiffusionBlendshapeSolveExecutorOffline(benchmark::State& state) 
     CHECK_AND_SKIP(rawModelInfoPtr != nullptr);
     auto modelInfo = ToUniquePtr(rawModelInfoPtr);
 
-    auto emotionExecutor = CreateEmotionExecutor(
-        bundle->GetCudaStream().Data(), bundle, a2eSkipInference
-    );
-
     std::ostringstream label;
     label << "FP16: " << useFP16
         << ", useGPUSolver: " << useGPUSolver
         << ", identity: " << modelInfo->GetNetworkInfo().GetIdentityName(identity)
         << ", executionOption: " << blendshapeExecutionOptionToString(executionOption)
-        << ", A2EPrecompute: " << precomputeA2E
-        << ", A2ESkipInference: " << a2eSkipInference
         << ", NbTracks: " << nbTracks
         ;
     state.SetLabel(label.str());
 
-    RunExecutorOffline<nva2f::IBlendshapeExecutorBundle>(state, precomputeA2E, bundle, emotionExecutor);
+    RunExecutorOffline<nva2f::IBlendshapeExecutorBundle>(state, bundle);
 }
 
 BENCHMARK(BM_DiffusionBlendshapeSolveExecutorOffline)->Apply([](benchmark::internal::Benchmark* b) {
@@ -148,7 +130,7 @@ BENCHMARK(BM_DiffusionBlendshapeSolveExecutorOffline)->Apply([](benchmark::inter
 static void CustomRangesStreaming(benchmark::internal::Benchmark* b, std::initializer_list<int64_t> nbTracksArg) {
     using ExecutionOption = nva2f::IGeometryExecutor::ExecutionOption;
     b->UseRealTime();
-    b->ArgNames({"FP16", "UseGPU", "Identity", "ExecutionOption", "A2ESkipInference", "AudioChunkSize", "NbTracks"});  // Assign meaningful names
+    b->ArgNames({"FP16", "UseGPU", "Identity", "ExecutionOption", "AudioChunkSize", "NbTracks"});  // Assign meaningful names
     b->ArgsProduct({
         {0, 1},
         {0, 1},
@@ -159,7 +141,6 @@ static void CustomRangesStreaming(benchmark::internal::Benchmark* b, std::initia
             static_cast<int>(ExecutionOption::Tongue),
             static_cast<int>(ExecutionOption::SkinTongue)
         },
-        {0, 1, 2, 4, 8, 16, 32},
         {1, 10, 100, 8000, 16000},
         nbTracksArg
     }); // Define for all the combinations
@@ -170,9 +151,8 @@ static void BM_RegressionBlendshapeSolveExecutorStreaming(benchmark::State& stat
     bool useGPUSolver = state.range(1);
     auto identity = state.range(2);
     auto executionOption = static_cast<nva2f::IGeometryExecutor::ExecutionOption>(state.range(3));
-    auto a2eSkipInference = state.range(4);
-    auto audioChunkSize = static_cast<std::size_t>(state.range(5));
-    auto nbTracks = static_cast<std::size_t>(state.range(6));
+    auto audioChunkSize = static_cast<std::size_t>(state.range(4));
+    auto nbTracks = static_cast<std::size_t>(state.range(5));
 
     nva2f::IRegressionModel::IGeometryModelInfo* rawModelInfoPtr = nullptr;
     auto bundle = ToUniquePtr(
@@ -190,22 +170,17 @@ static void BM_RegressionBlendshapeSolveExecutorStreaming(benchmark::State& stat
     CHECK_AND_SKIP(rawModelInfoPtr != nullptr);
     auto modelInfo = ToUniquePtr(rawModelInfoPtr);
 
-    auto emotionExecutor = CreateEmotionExecutor(
-        bundle->GetCudaStream().Data(), bundle, a2eSkipInference
-    );
-
     std::ostringstream label;
     label << "FP16: " << useFP16
         << ", useGPUSolver: " << useGPUSolver
         << ", identity: " << modelInfo->GetNetworkInfo().GetIdentityName()
         << ", executionOption: " << blendshapeExecutionOptionToString(executionOption)
-        << ", A2ESkipInference: " << a2eSkipInference
         << ", AudioChunkSize: " << audioChunkSize
         << ", NbTracks: " << nbTracks
         ;
     state.SetLabel(label.str());
 
-    RunExecutorStreaming<nva2f::IBlendshapeExecutorBundle>(state, audioChunkSize, bundle, emotionExecutor);
+    RunExecutorStreaming<nva2f::IBlendshapeExecutorBundle>(state, audioChunkSize, bundle);
 }
 
 BENCHMARK(BM_RegressionBlendshapeSolveExecutorStreaming)->Apply([](benchmark::internal::Benchmark* b) {
@@ -217,9 +192,8 @@ static void BM_DiffusionBlendshapeSolveExecutorStreaming(benchmark::State& state
     bool useGPUSolver = state.range(1);
     auto identity = state.range(2);
     auto executionOption = static_cast<nva2f::IGeometryExecutor::ExecutionOption>(state.range(3));
-    auto a2eSkipInference = state.range(4);
-    auto audioChunkSize = static_cast<std::size_t>(state.range(5));
-    auto nbTracks = static_cast<std::size_t>(state.range(6));
+    auto audioChunkSize = static_cast<std::size_t>(state.range(4));
+    auto nbTracks = static_cast<std::size_t>(state.range(5));
     const auto constantNoise = true;
 
     nva2f::IDiffusionModel::IGeometryModelInfo* rawModelInfoPtr = nullptr;
@@ -239,22 +213,17 @@ static void BM_DiffusionBlendshapeSolveExecutorStreaming(benchmark::State& state
     CHECK_AND_SKIP(rawModelInfoPtr != nullptr);
     auto modelInfo = ToUniquePtr(rawModelInfoPtr);
 
-    auto emotionExecutor = CreateEmotionExecutor(
-        bundle->GetCudaStream().Data(), bundle, a2eSkipInference
-    );
-
     std::ostringstream label;
     label << "FP16: " << useFP16
         << ", useGPUSolver: " << useGPUSolver
         << ", identity: " << modelInfo->GetNetworkInfo().GetIdentityName(identity)
         << ", executionOption: " << blendshapeExecutionOptionToString(executionOption)
-        << ", A2ESkipInference: " << a2eSkipInference
         << ", AudioChunkSize: " << audioChunkSize
         << ", NbTracks: " << nbTracks
         ;
     state.SetLabel(label.str());
 
-    RunExecutorStreaming<nva2f::IBlendshapeExecutorBundle>(state, audioChunkSize, bundle, emotionExecutor);
+    RunExecutorStreaming<nva2f::IBlendshapeExecutorBundle>(state, audioChunkSize, bundle);
 }
 
 BENCHMARK(BM_DiffusionBlendshapeSolveExecutorStreaming)->Apply([](benchmark::internal::Benchmark* b) {

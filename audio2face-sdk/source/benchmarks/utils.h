@@ -20,7 +20,6 @@
 // DEALINGS IN THE SOFTWARE.
 #pragma once
 
-#include "audio2emotion/audio2emotion.h"
 #include "audio2face/audio2face.h"
 
 #include <benchmark/benchmark.h>
@@ -106,11 +105,6 @@ std::string blendshapeExecutionOptionToString(ExecutionOption option) {
 void AddDefaultEmotion(benchmark::State& state, nva2f::IGeometryExecutorBundle& bundle);
 void AddDefaultEmotion(benchmark::State& state, nva2f::IBlendshapeExecutorBundle& bundle);
 
-template<typename BundleType>
-UniquePtr<nva2e::IEmotionExecutor> CreateEmotionExecutor(
-    cudaStream_t cudaStream, UniquePtr<BundleType>& bundle, std::size_t inferencesToSkip
-);
-
 using Clock = std::chrono::steady_clock;
 using TimePoint = Clock::time_point;
 static_assert(Clock::is_steady, "Clock is not steady");
@@ -155,36 +149,15 @@ private:
     std::vector<UniquePtr<nva2x::IHostTensorFloat>> _weightHostPinnedBatch;
 };
 
-class EmotionExecutorResultsCollector {
-public:
-    template <typename ExecutorBundleType>
-    void Init(nva2e::IEmotionExecutor* executor, ExecutorBundleType* executorBundle, benchmark::State& state);
-    static bool callbackForEmotionExecutor(void* userdata, const nva2e::IEmotionExecutor::Results& results);
-    void ResetCounters();
-    std::size_t GetTotalFrames() const;
-    bool HasFrameGenerated(std::size_t trackIndex) const;
-
-private:
-    struct EmotionExecutorCallbackData {
-        std::vector<nva2x::IEmotionAccumulator*> emotionAccumulators;
-        benchmark::State* state;
-        std::vector<std::size_t> frameIndices;
-    } _callbackData{};
-    nva2e::IEmotionExecutor* _executor;
-};
-
 template<typename A2FExecutorBundleType>
 void RunExecutorOffline(
     benchmark::State& state,
-    bool precomputeA2E,
-    UniquePtr<A2FExecutorBundleType>& a2fExecutorBundle,
-    UniquePtr<nva2e::IEmotionExecutor>& emotionExecutor
+    UniquePtr<A2FExecutorBundleType>& a2fExecutorBundle
 );
 
 template<typename A2FExecutorBundleType>
 void RunExecutorStreaming(
     benchmark::State& state,
     std::size_t audioChunkSize,
-    UniquePtr<A2FExecutorBundleType>& bundle,
-    UniquePtr<nva2e::IEmotionExecutor>& emotionExecutor
+    UniquePtr<A2FExecutorBundleType>& bundle
 );

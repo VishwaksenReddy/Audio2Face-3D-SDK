@@ -111,7 +111,6 @@ add_custom_target(install-pip-deps
 add_compile_definitions(
     AUDIO2X_LOG_LEVEL=1
     AUDIO2FACE_LOG_LEVEL=1
-    AUDIO2EMOTION_LOG_LEVEL=1
     _GLIBCXX_USE_CXX11_ABI=0
     EIGEN_MPL2_ONLY
     USE_NVTX
@@ -145,6 +144,5 @@ endif()
 enable_testing()
 
 add_subdirectory(audio2x-common)
-add_subdirectory(audio2emotion-sdk)
 add_subdirectory(audio2face-sdk)
 add_subdirectory(audio2x-sdk)

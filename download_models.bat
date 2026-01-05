@@ -12,9 +12,4 @@ hf download nvidia/Audio2Face-3D-v2.3.1-Claire --local-dir %A2F_MODEL_DIR%/audio
 hf download nvidia/Audio2Face-3D-v2.3.1-James  --local-dir %A2F_MODEL_DIR%/audio2face-3d-v2.3.1-james
 hf download nvidia/Audio2Face-3D-v2.3-Mark     --local-dir %A2F_MODEL_DIR%/audio2face-3d-v2.3-mark
 
-@REM Download A2E models
-set A2E_MODEL_DIR=%BASE_DIR%_data\audio2emotion-models
-mkdir "%A2E_MODEL_DIR%"
-hf download nvidia/Audio2Emotion-v2.2          --local-dir %A2E_MODEL_DIR%/audio2emotion-v2.2
-
-echo Models are downloaded to %A2F_MODEL_DIR% and %A2E_MODEL_DIR%
+echo Models are downloaded to %A2F_MODEL_DIR%

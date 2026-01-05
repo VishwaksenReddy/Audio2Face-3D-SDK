@@ -44,6 +44,7 @@ find_path(ZLIB_INCLUDE_DIR_DEBUG
     NAMES zlib.h
     PATHS ${_zlib_search_paths} ${PROJECT_SOURCE_DIR}/_deps/target-deps/zlib/debug
     PATH_SUFFIXES include
+    NO_DEFAULT_PATH
     DOC "ZLIB debug include directory"
 )
 
@@ -51,6 +52,7 @@ find_library(ZLIB_LIBRARY_DEBUG
     NAMES z zlib zlibd
     PATHS ${_zlib_search_paths} ${PROJECT_SOURCE_DIR}/_deps/target-deps/zlib/debug
     PATH_SUFFIXES lib lib64
+    NO_DEFAULT_PATH
     DOC "ZLIB debug library"
 )
 
@@ -63,6 +65,7 @@ find_path(ZLIB_INCLUDE_DIR_RELEASE
     NAMES zlib.h
     PATHS ${_zlib_search_paths} ${PROJECT_SOURCE_DIR}/_deps/target-deps/zlib/release
     PATH_SUFFIXES include
+    NO_DEFAULT_PATH
     DOC "ZLIB release include directory"
 )
 
@@ -70,6 +73,7 @@ find_library(ZLIB_LIBRARY_RELEASE
     NAMES z zlib
     PATHS ${_zlib_search_paths} ${PROJECT_SOURCE_DIR}/_deps/target-deps/zlib/release
     PATH_SUFFIXES lib lib64
+    NO_DEFAULT_PATH
     DOC "ZLIB release library"
 )
 

@@ -32,7 +32,7 @@
 static void CustomRangesOffline(benchmark::internal::Benchmark* b, std::initializer_list<int64_t> nbTracksArg) {
     using ExecutionOption = nva2f::IGeometryExecutor::ExecutionOption;
     b->UseRealTime();
-    b->ArgNames({"FP16", "Identity", "ExecutionOption", "A2EPrecompute", "A2ESkipInference", "NbTracks"});  // Assign meaningful names
+    b->ArgNames({"FP16", "Identity", "ExecutionOption", "NbTracks"});  // Assign meaningful names
     b->ArgsProduct({
         {0, 1},
         {0, 1, 2},
@@ -44,8 +44,6 @@ static void CustomRangesOffline(benchmark::internal::Benchmark* b, std::initiali
             static_cast<int>(ExecutionOption::Skin | ExecutionOption::Tongue | ExecutionOption::Jaw),
             static_cast<int>(ExecutionOption::All)
         },
-        {0, 1},
-        {0, 1, 2, 4, 8, 16, 32},
         nbTracksArg
     }); // Define for all the combinations
 }
@@ -54,9 +52,7 @@ static void BM_RegressionGeometryExecutorOffline(benchmark::State& state) {
     bool useFP16 = state.range(0);
     auto identity = state.range(1);
     auto executionOption = static_cast<nva2f::IGeometryExecutor::ExecutionOption>(state.range(2));
-    bool precomputeA2E = state.range(3);
-    auto a2eSkipInference = state.range(4);
-    auto nbTracks = static_cast<std::size_t>(state.range(5));
+    auto nbTracks = static_cast<std::size_t>(state.range(3));
 
     nva2f::IRegressionModel::IGeometryModelInfo* rawModelInfoPtr = nullptr;
     auto bundle = ToUniquePtr(
@@ -72,22 +68,15 @@ static void BM_RegressionGeometryExecutorOffline(benchmark::State& state) {
     CHECK_AND_SKIP(rawModelInfoPtr != nullptr);
     auto modelInfo = ToUniquePtr(rawModelInfoPtr);
 
-
-    auto emotionExecutor = CreateEmotionExecutor(
-        bundle->GetCudaStream().Data(), bundle, a2eSkipInference
-    );
-
     std::ostringstream label;
     label << "FP16: " << useFP16
         << ", identity: " << modelInfo->GetNetworkInfo().GetIdentityName()
         << ", executionOption: " << geometryExecutionOptionToString(executionOption)
-        << ", A2EPrecompute: " << precomputeA2E
-        << ", A2ESkipInference: " << a2eSkipInference
         << ", NbTracks: " << nbTracks
         ;
     state.SetLabel(label.str());
 
-    RunExecutorOffline<nva2f::IGeometryExecutorBundle>(state, precomputeA2E, bundle, emotionExecutor);
+    RunExecutorOffline<nva2f::IGeometryExecutorBundle>(state, bundle);
 }
 BENCHMARK(BM_RegressionGeometryExecutorOffline)->Apply([](benchmark::internal::Benchmark* b) {
     // This can go up to 128 but it would be very slow to benchmark with all the combinations
@@ -98,9 +87,7 @@ static void BM_DiffusionGeometryExecutorOffline(benchmark::State& state) {
     bool useFP16 = state.range(0);
     auto identity = state.range(1);
     auto executionOption = static_cast<nva2f::IGeometryExecutor::ExecutionOption>(state.range(2));
-    bool precomputeA2E = state.range(3);
-    auto a2eSkipInference = state.range(4);
-    auto nbTracks = static_cast<std::size_t>(state.range(5));
+    auto nbTracks = static_cast<std::size_t>(state.range(3));
     const auto constantNoise = true;
 
     nva2f::IDiffusionModel::IGeometryModelInfo* rawModelInfoPtr = nullptr;
@@ -118,21 +105,15 @@ static void BM_DiffusionGeometryExecutorOffline(benchmark::State& state) {
     CHECK_AND_SKIP(rawModelInfoPtr != nullptr);
     auto modelInfo = ToUniquePtr(rawModelInfoPtr);
 
-    auto emotionExecutor = CreateEmotionExecutor(
-        bundle->GetCudaStream().Data(), bundle, a2eSkipInference
-    );
-
     std::ostringstream label;
     label << "FP16: " << useFP16
         << ", identity: " << modelInfo->GetNetworkInfo().GetIdentityName(identity)
         << ", executionOption: " << geometryExecutionOptionToString(executionOption)
-        << ", A2EPrecompute: " << precomputeA2E
-        << ", A2ESkipInference: " << a2eSkipInference
         << ", NbTracks: " << nbTracks
         ;
     state.SetLabel(label.str());
 
-    RunExecutorOffline<nva2f::IGeometryExecutorBundle>(state, precomputeA2E, bundle, emotionExecutor);
+    RunExecutorOffline<nva2f::IGeometryExecutorBundle>(state, bundle);
 }
 BENCHMARK(BM_DiffusionGeometryExecutorOffline)->Apply([](benchmark::internal::Benchmark* b) {
     return CustomRangesOffline(b, {1, 2, 4, 8}); // Max batch size for diffusion is 8
@@ -141,7 +122,7 @@ BENCHMARK(BM_DiffusionGeometryExecutorOffline)->Apply([](benchmark::internal::Be
 static void CustomRangesStreaming(benchmark::internal::Benchmark* b, std::initializer_list<int64_t> nbTracksArg) {
     using ExecutionOption = nva2f::IGeometryExecutor::ExecutionOption;
     b->UseRealTime();
-    b->ArgNames({"FP16", "Identity", "ExecutionOption", "A2ESkipInference", "AudioChunkSize","NbTracks"});  // Assign meaningful names
+    b->ArgNames({"FP16", "Identity", "ExecutionOption", "AudioChunkSize","NbTracks"});  // Assign meaningful names
     b->ArgsProduct({
         {0, 1},
         {0, 1, 2},
@@ -153,7 +134,6 @@ static void CustomRangesStreaming(benchmark::internal::Benchmark* b, std::initia
             static_cast<int>(ExecutionOption::Skin | ExecutionOption::Tongue | ExecutionOption::Jaw),
             static_cast<int>(ExecutionOption::All)
         },
-        {0, 1, 2, 4, 8, 16, 32},
         {1, 10, 100, 8000, 16000},
         nbTracksArg
     }); // Define for all the combinations
@@ -163,9 +143,8 @@ static void BM_RegressionGeometryExecutorStreaming(benchmark::State& state) {
     bool useFP16 = state.range(0);
     auto identity = state.range(1);
     auto executionOption = static_cast<nva2f::IGeometryExecutor::ExecutionOption>(state.range(2));
-    auto a2eSkipInference = state.range(3);
-    auto audioChunkSize = static_cast<std::size_t>(state.range(4));
-    auto nbTracks = static_cast<std::size_t>(state.range(5));
+    auto audioChunkSize = static_cast<std::size_t>(state.range(3));
+    auto nbTracks = static_cast<std::size_t>(state.range(4));
 
     nva2f::IRegressionModel::IGeometryModelInfo* rawModelInfoPtr = nullptr;
     auto bundle = ToUniquePtr(
@@ -181,22 +160,16 @@ static void BM_RegressionGeometryExecutorStreaming(benchmark::State& state) {
     CHECK_AND_SKIP(rawModelInfoPtr != nullptr);
     auto modelInfo = ToUniquePtr(rawModelInfoPtr);
 
-
-    auto emotionExecutor = CreateEmotionExecutor(
-        bundle->GetCudaStream().Data(), bundle, a2eSkipInference
-    );
-
     std::ostringstream label;
     label << "FP16: " << useFP16
         << ", identity: " << modelInfo->GetNetworkInfo().GetIdentityName()
         << ", executionOption: " << geometryExecutionOptionToString(executionOption)
-        << ", A2ESkipInference: " << a2eSkipInference
         << ", AudioChunkSize: " << audioChunkSize
         << ", NbTracks: " << nbTracks
         ;
     state.SetLabel(label.str());
 
-    RunExecutorStreaming<nva2f::IGeometryExecutorBundle>(state, audioChunkSize, bundle, emotionExecutor);
+    RunExecutorStreaming<nva2f::IGeometryExecutorBundle>(state, audioChunkSize, bundle);
 }
 BENCHMARK(BM_RegressionGeometryExecutorStreaming)->Apply([](benchmark::internal::Benchmark* b) {
     // This can go up to 128 but it would be very slow to benchmark with all the combinations
@@ -207,9 +180,8 @@ static void BM_DiffusionGeometryExecutorStreaming(benchmark::State& state) {
     bool useFP16 = state.range(0);
     auto identity = state.range(1);
     auto executionOption = static_cast<nva2f::IGeometryExecutor::ExecutionOption>(state.range(2));
-    auto a2eSkipInference = state.range(3);
-    auto audioChunkSize = static_cast<std::size_t>(state.range(4));
-    auto nbTracks = static_cast<std::size_t>(state.range(5));
+    auto audioChunkSize = static_cast<std::size_t>(state.range(3));
+    auto nbTracks = static_cast<std::size_t>(state.range(4));
     const auto constantNoise = true;
 
     nva2f::IDiffusionModel::IGeometryModelInfo* rawModelInfoPtr = nullptr;
@@ -227,21 +199,16 @@ static void BM_DiffusionGeometryExecutorStreaming(benchmark::State& state) {
     CHECK_AND_SKIP(rawModelInfoPtr != nullptr);
     auto modelInfo = ToUniquePtr(rawModelInfoPtr);
 
-    auto emotionExecutor = CreateEmotionExecutor(
-        bundle->GetCudaStream().Data(), bundle, a2eSkipInference
-    );
-
     std::ostringstream label;
     label << "FP16: " << useFP16
         << ", identity: " << modelInfo->GetNetworkInfo().GetIdentityName(identity)
         << ", executionOption: " << geometryExecutionOptionToString(executionOption)
-        << ", A2ESkipInference: " << a2eSkipInference
         << ", AudioChunkSize: " << audioChunkSize
         << ", NbTracks: " << nbTracks
         ;
     state.SetLabel(label.str());
 
-    RunExecutorStreaming<nva2f::IGeometryExecutorBundle>(state, audioChunkSize, bundle, emotionExecutor);
+    RunExecutorStreaming<nva2f::IGeometryExecutorBundle>(state, audioChunkSize, bundle);
 }
 BENCHMARK(BM_DiffusionGeometryExecutorStreaming)->Apply([](benchmark::internal::Benchmark* b) {
     return CustomRangesStreaming(b, {1, 2, 4, 8}); // Max batch size for diffusion is 8

@@ -4,9 +4,7 @@ This directory contains sample applications demonstrating different aspects of t
 
 ## Sample Overview
 
-1. **`sample-a2f-executor`** - Simplest sample with executor API. Shows geometry executor creation with bundles, audio loading, and neutral emotion setup (no A2E needed). Supports both regression and diffusion models. Recommended starting point.
+1. **`sample-a2f-executor`** - Simplest sample with executor API. Shows geometry executor creation with bundles, audio loading, and neutral emotion setup. Supports both regression and diffusion models. Recommended starting point.
 
-2. **`sample-a2f-a2e-executor`** - Audio2Face and Audio2Emotion integration with streaming capabilities. Shows combined processing, offline vs streaming modes.
-
-3. **`sample-a2f-low-level-api-fullface`** - Advanced usage of low-level API for maximum control. Direct usage of core components with tensor manipulation, NPY data loading, and manual inference engine setup.
+2. **`sample-a2f-low-level-api-fullface`** - Advanced usage of low-level API for maximum control. Direct usage of core components with tensor manipulation, NPY data loading, and manual inference engine setup.
 

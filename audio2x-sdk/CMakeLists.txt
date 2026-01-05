@@ -14,7 +14,6 @@ set_target_properties(audio2x PROPERTIES
 
 # Add source files from the three components
 target_sources(audio2x PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/../audio2emotion-sdk/source/audio2emotion/audio2emotion.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../audio2face-sdk/source/audio2face/audio2face.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../audio2x-common/source/audio2x/audio2x.cpp
 )
@@ -28,7 +27,6 @@ target_compile_definitions(audio2x PRIVATE
 if(WIN32)
     target_compile_definitions(audio2x PRIVATE
         AUDIO2FACE_SDK_DLL_EXPORTS
-        AUDIO2EMOTION_SDK_DLL_EXPORTS
     )
 endif()
 
@@ -36,7 +34,6 @@ endif()
 target_link_libraries(audio2x
     PRIVATE
         # Core libraries that need to be built first
-        audio2emotion-core
         audio2face-core
         audio2x-common
 )
@@ -45,7 +42,6 @@ target_link_libraries(audio2x
 target_include_directories(audio2x
     INTERFACE
         $<TARGET_PROPERTY:audio2face-core,INTERFACE_INCLUDE_DIRECTORIES>
-        $<TARGET_PROPERTY:audio2emotion-core,INTERFACE_INCLUDE_DIRECTORIES>
         $<TARGET_PROPERTY:audio2x-common,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
@@ -59,23 +55,15 @@ if(UNIX)
 endif()
 
 # Get header files (excluding internal directories)
-file(GLOB AUDIO2EMOTION_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/../audio2emotion-sdk/include/audio2emotion/*.h")
 file(GLOB AUDIO2FACE_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/../audio2face-sdk/include/audio2face/*.h")
 file(GLOB AUDIO2X_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/../audio2x-common/include/audio2x/*.h")
 
 # Create copy commands for all headers in one custom command
 set(COPY_COMMANDS
     COMMAND ${CMAKE_COMMAND} -E echo "Copying headers to ${CMAKE_CURRENT_BINARY_DIR}/include"
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/include/audio2emotion"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/include/audio2face"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/include/audio2x"
 )
-
-# Add copy commands for audio2emotion headers
-foreach(header ${AUDIO2EMOTION_HEADERS})
-    list(APPEND COPY_COMMANDS
-        COMMAND ${CMAKE_COMMAND} -E copy "${header}" "${CMAKE_CURRENT_BINARY_DIR}/include/audio2emotion/")
-endforeach()
 
 # Add copy commands for audio2face headers
 foreach(header ${AUDIO2FACE_HEADERS})
