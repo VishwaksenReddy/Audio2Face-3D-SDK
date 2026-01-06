@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GLTF Viewer</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+      #hud {
+        position: fixed;
+        top: 12px;
+        left: 12px;
+        padding: 10px 12px;
+        background: rgba(0, 0, 0, 0.55);
+        color: #fff;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+        font-size: 12px;
+        line-height: 1.35;
+        border-radius: 10px;
+        max-width: min(520px, calc(100vw - 24px));
+        backdrop-filter: blur(6px);
+        user-select: none;
+        pointer-events: none;
+        white-space: pre-wrap;
+      }
+      #panel {
+        position: fixed;
+        top: 12px;
+        right: 12px;
+        width: min(360px, calc(100vw - 24px));
+        max-height: calc(100vh - 24px);
+        overflow: hidden;
+        background: rgba(0, 0, 0, 0.55);
+        color: #fff;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+        border-radius: 12px;
+        backdrop-filter: blur(6px);
+        user-select: none;
+      }
+      #panelHeader {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 12px;
+        cursor: pointer;
+      }
+      #panelHeaderTitle {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+      }
+      #panelHeaderHint {
+        font-size: 12px;
+        opacity: 0.85;
+      }
+      #panelBody {
+        max-height: calc(100vh - 24px - 40px);
+        overflow: auto;
+        padding: 10px 12px 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      #panel.collapsed #panelBody {
+        display: none;
+      }
+      #audioPanel {
+        position: fixed;
+        bottom: 12px;
+        right: 12px;
+        width: min(360px, calc(100vw - 24px));
+        max-height: calc(100vh - 24px);
+        overflow: hidden;
+        background: rgba(0, 0, 0, 0.55);
+        color: #fff;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+        border-radius: 12px;
+        backdrop-filter: blur(6px);
+        user-select: none;
+      }
+      #audioPanelHeader {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 12px;
+        cursor: pointer;
+      }
+      #audioPanelHeaderTitle {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+      }
+      #audioPanelHeaderHint {
+        font-size: 12px;
+        opacity: 0.85;
+      }
+      #audioPanelBody {
+        max-height: calc(100vh - 24px - 40px);
+        overflow: auto;
+        padding: 10px 12px 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      #audioPanel.collapsed #audioPanelBody {
+        display: none;
+      }
+      .sectionTitle {
+        font-size: 12px;
+        font-weight: 600;
+        margin: 8px 0 6px;
+        opacity: 0.95;
+      }
+      .row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        align-items: center;
+        margin: 8px 0;
+      }
+      .label {
+        font-size: 12px;
+        opacity: 0.95;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .value {
+        font-size: 12px;
+        opacity: 0.85;
+        font-variant-numeric: tabular-nums;
+      }
+      input[type="range"] {
+        width: 100%;
+      }
+      .sliderRow {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 6px;
+        margin: 8px 0 10px;
+      }
+      .divider {
+        height: 1px;
+        background: rgba(255, 255, 255, 0.08);
+        margin: 10px 0;
+      }
+      .btn {
+        width: 100%;
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.06);
+        color: white;
+        cursor: pointer;
+      }
+      .btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      input[type="file"] {
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="hud">Loading...</div>
+    <div id="panel" class="collapsed" hidden>
+      <div id="panelHeader" role="button" tabindex="0" aria-expanded="false">
+        <div id="panelHeaderTitle">Blendshapes</div>
+        <div id="panelHeaderHint">Show</div>
+      </div>
+      <div id="panelBody"></div>
+    </div>
+    <div id="audioPanel" class="collapsed">
+      <div id="audioPanelHeader" role="button" tabindex="0" aria-expanded="false">
+        <div id="audioPanelHeaderTitle">Audio</div>
+        <div id="audioPanelHeaderHint">Show</div>
+      </div>
+      <div id="audioPanelBody">
+        <div class="sectionTitle">Send audio file</div>
+        <div class="sliderRow">
+          <div class="label" id="audioFileLabel">No file selected</div>
+          <input id="audioFile" type="file" accept=".wav,audio/wav" />
+        </div>
+        <div class="row">
+          <button id="audioSend" class="btn" type="button" disabled>Process + stream</button>
+          <button id="audioStop" class="btn" type="button" disabled>Stop</button>
+        </div>
+        <div class="row">
+          <div class="label">Progress</div>
+          <div class="value" id="audioProgress">-</div>
+        </div>
+        <div class="row">
+          <div class="label">Status</div>
+          <div class="value" id="audioStatus">Idle</div>
+        </div>
+        <div class="divider"></div>
+        <div class="value">
+          Requires running the local viewer server: <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace;">python serve_viewer.py</span>
+        </div>
+      </div>
+    </div>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.1/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.1/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module" src="./viewer.js"></script>
+  </body>
+</html>
+

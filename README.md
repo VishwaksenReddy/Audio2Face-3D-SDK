@@ -95,6 +95,10 @@ hf auth login    # if required for access
 
 Use `run_sample.{bat|sh}` to run executables with the required CUDA/TensorRT libraries on the PATH.
 
+## WebSocket inference server
+
+The repo includes a reference WebSocket server that streams blendshape frames for streaming audio input: `audio2face-inference-server`. See `audio2face-sdk/source/inference-server/README.md`.
+
 ### Windows
 
 ```powershell
