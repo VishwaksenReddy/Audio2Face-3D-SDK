@@ -12,6 +12,23 @@ $env:TENSORRT_ROOT_DIR="C:\TensorRT-10.13.0.35"
 .\run_sample.bat .\_build\release\audio2face-sdk\bin\audio2face-inference-server.exe --host 127.0.0.1 --port 8765
 ```
 
+## One-command build + bundle (Windows)
+
+The repo includes an orchestrator that builds the server, downloads models, generates TensorRT engines/sample data, validates outputs, and produces a minimal runnable bundle.
+
+From the repo root:
+
+```powershell
+.\orchestrate_inference_server.bat
+```
+
+Notes:
+- `download_models.bat` requires the Hugging Face CLI (`hf`) on `PATH`.
+- `gen_testdata.bat` requires `TENSORRT_ROOT_DIR` to be set.
+- Add `-SmokeTest` to attempt starting the server briefly after building.
+
+The bundle is written to `dist/inference-server-bundle/<config>/` and includes `start_server.ps1` and `start_server.bat` for launching.
+
 ## WebSocket API
 
 This server currently supports **one session per WebSocket connection**.
