@@ -407,46 +407,46 @@ function Write-StartScripts(
     $ps1Template = @'
 [CmdletBinding()]
 param(
-    [string]\$BindHost = '127.0.0.1',
-    [int]\$Port = 8765,
-    [string]\$Model = "__DEFAULT_MODEL__",
-    [string[]]\$ExtraArgs = @()
+    [string]$BindHost = '127.0.0.1',
+    [int]$Port = 8765,
+    [string]$Model = "__DEFAULT_MODEL__",
+    [string[]]$ExtraArgs = @()
 )
 
 Set-StrictMode -Version Latest
-\$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 'Stop'
 
-function Fail([string]\$message) { throw \$message }
+function Fail([string]$message) { throw $message }
 
-if ([string]::IsNullOrWhiteSpace(\$env:CUDA_PATH)) {
+if ([string]::IsNullOrWhiteSpace($env:CUDA_PATH)) {
     Fail 'CUDA_PATH is not set (e.g. C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.x).'
 }
-if ([string]::IsNullOrWhiteSpace(\$env:TENSORRT_ROOT_DIR)) {
+if ([string]::IsNullOrWhiteSpace($env:TENSORRT_ROOT_DIR)) {
     Fail 'TENSORRT_ROOT_DIR is not set (e.g. C:\TensorRT-10.x.y.z).'
 }
 
-\$root = Split-Path -Parent \$MyInvocation.MyCommand.Path
-\$bin = Join-Path \$root 'bin'
-\$modelPath = if ([System.IO.Path]::IsPathRooted(\$Model)) { \$Model } else { Join-Path \$root \$Model }
+$root = Split-Path -Parent $MyInvocation.MyCommand.Path
+$bin = Join-Path $root 'bin'
+$modelPath = if ([System.IO.Path]::IsPathRooted($Model)) { $Model } else { Join-Path $root $Model }
 
-if (-not (Test-Path -LiteralPath \$modelPath)) {
-    Fail \"Model not found: \$modelPath\"
+if (-not (Test-Path -LiteralPath $modelPath)) {
+    Fail "Model not found: $modelPath"
 }
 
-\$oldPath = \$env:PATH
+$oldPath = $env:PATH
 try {
-    \$env:PATH = @(
-        \$bin
-        (Join-Path \$env:CUDA_PATH 'bin')
-        (Join-Path \$env:TENSORRT_ROOT_DIR 'lib')
-        (Join-Path \$env:TENSORRT_ROOT_DIR 'bin')
-        \$oldPath
+    $env:PATH = @(
+        $bin
+        (Join-Path $env:CUDA_PATH 'bin')
+        (Join-Path $env:TENSORRT_ROOT_DIR 'lib')
+        (Join-Path $env:TENSORRT_ROOT_DIR 'bin')
+        $oldPath
     ) -join ';'
 
-    \$exe = Join-Path \$bin 'audio2face-inference-server.exe'
-    & \$exe --host \$BindHost --port \$Port --model \$modelPath @ExtraArgs
+    $exe = Join-Path $bin 'audio2face-inference-server.exe'
+    & $exe --host $BindHost --port $Port --model $modelPath @ExtraArgs
 } finally {
-    \$env:PATH = \$oldPath
+    $env:PATH = $oldPath
 }
 '@
     $ps1 = $ps1Template.Replace('__DEFAULT_MODEL__', $defaultModelRelPath)
